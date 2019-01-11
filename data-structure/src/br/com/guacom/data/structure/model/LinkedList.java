@@ -1,216 +1,301 @@
 package br.com.guacom.data.structure.model;
 
-//A remoção em uma lista ligada simples (igual a que vimos) leva tempo linear. 
-//Afinal, precisamos navegar na lista até achar o elemento antes e o depois do elemento a ser removido.
+import java.util.Locale;
+import java.util.NoSuchElementException;
+
+//Lista duplamente ligada
+
+//	Qual a diferença entre uma lista ligada simples e uma lista duplamente ligada?
+//Na lista ligada simples a célula só aponta para a próxima célula da lista. 
+//Já na lista duplamente ligada, a célula tem referências para a anterior e para a próxima. 
+//A grande vantagem é que muitas operações necessitam também da célular anterior, e tudo fica mais fácil 
+//com a referência armazenada em cada célula.
+
+//	Tempo de remoção
+
+//A remoção em uma lista ligada pode ser ou linear ou constante.
+//Se você tiver a referência em mãos da célula que será deletada, então o tempo é constante. 
+//Afinal, já que você tem anterior e proximo nas mãos, basta acertar as referências.
+//Se você precisar procurar pelo elemento primeiro, então o tempo será linear, afinal passará por todas as células no pior caso.
+
+
+//	Como funciona uma inserção de um elemento no meio de uma lista duplamente ligada?
+
+//A célula X para entrar no meio de uma lista duplamente ligada precisa:
+//
+//Pegar a célula anterior e marcar o proximo dela como X
+//Pegar a antiga célula proximo da anterior, e marcar a anterior dela como X
+//Marcar anterior de X como a antiga anterior
+//Marcar proxima de X como sendo a antiga proxima
+
+//	Tempo de execução de inserção no inicio e no fim de uma lista.
+//Em ambos o tempo é constante. Assim como na lista ligada simples, basta acertar as referências, 
+//já que a estrutura armazena o primeiro e ultimo nós.
 
 public class LinkedList<T> implements java.io.Serializable {
+
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 3370718357849371837L;
+	private static final long serialVersionUID = 8634364631500184993L;
 	private Node<T> first;
+	private Node<T> nextItem;
 	private Node<T> last;
-	private Node<T> actual;
 	private int size;
 
-	public LinkedList() {}
-	
-	public void addFirst(T element) {
-		if (element == null)
-			throw new NullPointerException("Objeto nulo!");
-		Node<T> newNode = new Node<T>(element, first);
-		first = newNode;
-		if (size == 0)
-			last = first;
-		size++;
+	public LinkedList() {
 	}
 
-	public void addLast(T element) {
-		if (size == 0)
-			addFirst(element);
+	public boolean addFirst(T item) {
+		if (item == null)
+			throw new NullPointerException("Objeto inválido!");
+		if (isEmpty()) {
+			Node<T> newNode = new Node<T>(item);
+			last = first = newNode;
+		} else {
+			Node<T> newNode = new Node<T>(item, first);
+			first.setPrev(newNode);
+			first = newNode;
+		}
+		size++;
+		return true;
+	}
+
+	public boolean addLast(T item) {
+		if (isEmpty())
+			return addFirst(item);
 		else {
-			if (element == null)
-				throw new NullPointerException("Objeto nulo!");
-			Node<T> newNode = new Node<T>(element, last.getNext());
+			if (item == null)
+				throw new NullPointerException("Objeto inválido!");
+			Node<T> newNode = new Node<T>(item, last.getNext());
+			newNode.setPrev(last);
 			last.setNext(newNode);
 			last = newNode;
-			size++;
 		}
+		size++;
+		return true;
 	}
 
-	public void add(int index, T element) {
-		if (isEmpty())
-			addFirst(element);
+	private Node<T> getNode(int index) {
+		checkElementIndex(index);
+		Node<T> node = first;
+		for (int i = 0; i < index; i++) {
+			node = node.getNext();
+		}
+		return node;
+	}
+
+	public boolean add(int index, T item) {
+		if ((isEmpty() || index == 0))
+			return addFirst(item);
 		else if (index == size)
-			addLast(element);
+			return addLast(item);
 		else {
-			rangeCheck(index);
-			if(element == null)
-				throw new NullPointerException("Objeto nulo!");
+			if (item == null)
+				throw new NullPointerException("Objeto inválido!");
 			Node<T> previous = getNode(index - 1);
-			Node<T> newNode = new Node<T>(element, previous.getNext());
+			Node<T> newNode = new Node<T>(item, previous.getNext(), previous);
+			Node<T> next = newNode.getNext();
+			next.setPrev(newNode);
 			previous.setNext(newNode);
 			size++;
 		}
+		return true;
+	}
+	
+	public void removeFirst() {
+		if (!isEmpty()) {
+			Node<T> prox = first.getNext();
+			if (size > 1)
+				prox.setPrev(null);
+			first = prox;
+			if (--size == 0)
+				last = first;
+		}
+	}
+
+	// Consumo constante "O(1)"
+	public void removeLast() {
+		checkElementIndex(size - 1);
+		if (size == 1)
+			removeFirst();
+		else {
+			Node<T> prev = last.getPrev();
+			prev.setNext(null);
+			last = prev;
+			--size;
+		}
+	}
+	
+
+	public void remove(int index) {
+		if (index == 0)
+			removeFirst();
+		else if (index == size - 1)
+			removeLast();
+		else {
+			Node<T> prev = getNode(index - 1);
+			Node<T> delete = prev.getNext();
+			Node<T> next = delete.getNext();
+			prev.setNext(next);
+			next.setPrev(prev);
+			delete.item = null;
+			delete.next = null;
+			--size;
+		}
+	}
+
+	public void remove(T item) {
+		remove(indexOf(item));
+	}
+
+	public boolean contains(T item) {
+		return indexOf(item) >= 0;
+	}
+	
+	public void clear() {
+		if(!isEmpty()) {
+			for(Node<T> x = first; x != null; ){
+				Node<T> next = x.next;
+				x.item = null;
+				x.next = null;
+				x.prev = null;
+				x = next;
+			}
+			first = last = null;
+			size = 0;
+		}
+	}
+
+	public int indexOf(T item) {
+		if (item == null)
+			throw new NullPointerException("Objeto inválido!");
+		if (item.equals(first.getItem()))
+			return 0;
+		else if (item.equals(last.getItem()))
+			return size - 1;
+		else if (item.equals(last.getPrev().getItem()))
+			return size - 2;
+		else {
+			Node<T> next = first.getNext();
+			for (int i = 1; i < size; i++) {
+				if (next.getItem().equals(item))
+					return i;
+				next = next.getNext();
+			}
+		}
+		return -1;
+	}
+
+	public int lastIndexOf(T item) {
+		if (item == null)
+			throw new NullPointerException("Objeto inválido!");
+		else if (item.equals(last.getItem()))
+			return size - 1;
+		else {
+			Node<T> prev = last.getPrev();
+			for (int i = size - 2; i >= 0; i--) {
+				if (item.equals(prev.getItem()))
+					return i;
+				prev = prev.getPrev();
+			}
+		}
+		return -1;
+	}
+
+	public T get(int index) {
+		return this.getNode(index).item;
+	}
+
+	public T getFirst() {
+		final Node<T> f = first;
+		if(f == null)
+			throw new NoSuchElementException();
+		return f.item;
+	}
+	
+	public T getLast() {
+		final Node<T> l = last;
+		if(l == null)
+			throw new NoSuchElementException();
+		return l.item;
 	}
 
 	public boolean isEmpty() {
 		return size == 0;
 	}
 
-	private Node<T> getNode(int index) {
-		rangeCheck(index);
-		Node<T> current = first;
-		for (int i = 0; i < index; i++) {
-			current = current.getNext();
-		}
-		return current;
-	}
-
-	public void rangeCheck(int index) {
-		if (index < 0 || index >= size)
-			throw new IndexOutOfBoundsException("Fora do limite do indice!");
-	}
-
-	public T get(int index) {
-		return this.getNode(index).getElement();
-	}
-
-	public void removeFirst() {
-		rangeCheck(size - 1);
-		first = first.getNext();
-		if (--size == 0)
-			last = first;
-	}
-
-	public void removeLast() {
-		if (size == 1)
-			removeFirst();
-		Node<T> previous = getNode(size - 2);
-		previous.setNext(last.getNext());
-		last = previous;
-		--size;
-	}
-
-	public void remove(int index) {
-		if (index == 0 || size == 1)
-			removeFirst();
-		else if (index == size - 1)
-			removeLast();
-		else {
-			Node<T> current = getNode(index);
-			Node<T> previous = getNode(index - 1);
-			previous.setNext(current.getNext());
-			current.setNext(last.getNext());
-			current = last.getNext();
-			--size;
-		}
-	}
-
-	public void remove(T element) {
-		remove(indexOf(element));
-	}
-
-	public boolean contains(T element) {
-		return indexOf(element) >= 0;
-	}
-
-	public T get() {
-		return actual.getElement();
-	}
-
-	public int size() {
-		return size;
+	private void checkElementIndex(int index) {
+		if (!isElementIndex(index))
+			throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
 	}
 	
-	@SuppressWarnings("unused")
-	public void clear() {
-		if(!isEmpty()) {
-			Node<T> aux = null;
-			Node<T> current = aux = first;
-			for(int i = 1; i < size; i++) {
-				current = current.getNext();
-				aux = null;
-				aux = current;
-			}
-			first = last = null;
-			size = 0;
-		}
-	}
-	
-	public int indexOf(T element) {
-		Node<T> current = first;
-		if (element == null)
-			throw new NullPointerException("Objeto nulo!");
-		if (element.equals(first.getElement()))
-			return 0;
-		else if (element.equals(last.getElement()))
-			return size - 1;
-		for (int i = 0; i < size; i++) {
-			if (element.equals(current.getElement()))
-				return i;
-			current = current.getNext();
-		}
-		return -1;
+	private String outOfBoundsMsg(int index) {
+		return "Index: " + index + ", Size: " + size;
 	}
 
-	public int lastIndexOf(T element) {
-		if(element == null)
-			throw new NullPointerException("Objeto nulo!");
-		Node<T> current = last;
-		if(element.equals(last.getElement()))
-			return size - 1;
-		for(int i = size - 2; i >= 0; i--) {
-			current = getNode(i);
-			if(element.equals(current.getElement()))
-				return i;
-		}
-		return -1;
-	}
-
-	public boolean hasNext() {
-		if (first == null)
-			return false;
-		else if (actual == null) {
-			actual = first;
-			return true;
-		} else {
-			boolean hasNext = actual.getNext() != null;
-			actual = actual.getNext();
-			return hasNext;
-		}
+	private boolean isElementIndex(int index) {
+		return index >= 0 && index < size;
 	}
 
 	@Override
 	public String toString() {
 		if (isEmpty())
 			return "[]";
+
 		StringBuilder builder = new StringBuilder("[");
-		while (this.hasNext()) {
-			builder.append(this.get());
+
+		for (Node<T> x = first; x != null; x = x.next) {
+			builder.append(x.getItem());
 			builder.append(", ");
 		}
 		return removeDelimiter(builder);
 	}
 
-	private String removeDelimiter(CharSequence string) {
-		String configure = string.subSequence(0, string.length() - 2).toString();
-		configure += "]";
-		return configure;
+	public T getNextItem() {
+		return nextItem.getItem();
 	}
 
-	@SuppressWarnings("hiding")
-	private class Node<T> {
-		private T element;
-		private Node<T> next;
+	public boolean hasNext() {
+		if (first == null)
+			return false;
+		else if (nextItem == null) {
+			nextItem = first;
+			return true;
+		} else {
+			boolean hasNext = nextItem.getNext() != null;
+			nextItem = nextItem.getNext();
+			return hasNext;
+		}
+	}
 
-		private Node(T element, Node<T> next) {
-			this.element = element;
+	private String removeDelimiter(CharSequence string) {
+		return String.format(new Locale("pt", "BR"), "%s]", string.subSequence(0, string.length() - 2));
+	}
+
+	public int size() {
+		return size;
+	}
+
+	private static class Node<T> {
+
+		T item;
+		Node<T> next;
+		Node<T> prev;
+
+		public Node(T item, Node<T> next, Node<T> prev) {
+			this.item = item;
 			this.next = next;
+			this.prev = prev;
 		}
 
-		private Node(T element) {
-			this.element = element;
+		public Node(T item) {
+			this.item = item;
+		}
+
+		public Node(T item, Node<T> next) {
+			this.item = item;
+			this.next = next;
 		}
 
 		private Node<T> getNext() {
@@ -221,8 +306,16 @@ public class LinkedList<T> implements java.io.Serializable {
 			this.next = next;
 		}
 
-		private T getElement() {
-			return element;
+		private Node<T> getPrev() {
+			return prev;
+		}
+
+		private void setPrev(Node<T> prev) {
+			this.prev = prev;
+		}
+
+		private T getItem() {
+			return item;
 		}
 	}
 }

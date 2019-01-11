@@ -1,12 +1,12 @@
 package br.com.guacom.data.structure.teste;
 
 import br.com.guacom.data.structure.model.ArrayList;
-import br.com.guacom.data.structure.model.LinkedList;
+import br.com.guacom.data.structure.model.LinkedListSimple;
 
 public class TesteLinked {
 
 	public static void main(String[] args) {
-		LinkedList<String> string = new LinkedList<>();
+		LinkedListSimple<String> string = new LinkedListSimple<>();
 		ArrayList<String> list = new ArrayList<>();
 		long ini = System.currentTimeMillis();
 		for(int i = 0; i < 1000000; i++) {
