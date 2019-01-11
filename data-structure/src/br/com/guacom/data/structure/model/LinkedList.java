@@ -141,6 +141,7 @@ public class LinkedList<T> implements java.io.Serializable {
 			next.setPrev(prev);
 			delete.item = null;
 			delete.next = null;
+			delete.prev = null;
 			--size;
 		}
 	}
@@ -224,7 +225,7 @@ public class LinkedList<T> implements java.io.Serializable {
 	public boolean isEmpty() {
 		return size == 0;
 	}
-
+	
 	private void checkElementIndex(int index) {
 		if (!isElementIndex(index))
 			throw new IndexOutOfBoundsException(outOfBoundsMsg(index));

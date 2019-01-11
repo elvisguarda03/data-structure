@@ -45,9 +45,8 @@ public class ArrayList<T> implements java.io.Serializable {
 	}
 
 	private void push(int index) {
-		for (int i = size - 1; i >= index; i--) {
+		for (int i = size - 1; i >= index; i--)
 			elementData[i + 1] = elementData[i];
-		}
 	}
 
 	public T get(int index) {
@@ -121,7 +120,7 @@ public class ArrayList<T> implements java.io.Serializable {
 
 	public void clear() {
 		if (!isEmpty()) {
-			for(int i = 0; i < size; i++) {
+			for (int i = 0; i < size; i++) {
 				elementData[i] = null;
 			}
 			size = 0;
@@ -142,13 +141,12 @@ public class ArrayList<T> implements java.io.Serializable {
 			builder.append(elementData[i]);
 			builder.append(", ");
 		}
-		if (!isEmpty())
-			builder.append(elementData[size - 1]);
+		builder.append(elementData[size - 1]);
 		builder.append("]");
 		return builder.toString();
 	}
 
-	private boolean isEmpty() {
+	public boolean isEmpty() {
 		return size == 0;
 	}
 }
